@@ -5,8 +5,7 @@ from reportlab import platypus
 from PIL import Image
 from tempfile import mkdtemp
 from re import search
-from os import listdir
-from os.path import isfile, join
+from os import remove
 
 class PdfCreator:
     def __init__(self, imagePaths, pdfPath = None):
@@ -51,7 +50,7 @@ class PdfCreator:
         pageWidth = 583
         pageHeight = 829
         story = []
-        isSuccess = False
+        hasStory = False
         for p in imagePaths:
             try:
                 pilImg = Image.open(p)
@@ -73,12 +72,15 @@ class PdfCreator:
             story.append(repImg)
             story.append(platypus.PageBreak())
             print('OK')
-            isSuccess = True
+            hasStory = True
         doc.build(story)
-        if isSuccess:
+        if hasStory:
             print("Pdf file was created successfully")
         else:
             print("Pdf file was not created")
+            if exists(self.__pdfPath):
+                remove(self.__pdfPath)
+
 
     def create(self):
         imagePaths = self.__prepare()
