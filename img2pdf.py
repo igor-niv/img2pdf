@@ -11,11 +11,23 @@ from os.path import isfile, join
 class PdfCreator:
     def __init__(self, imagePaths, pdfPath = None):
         self.__imagePaths = imagePaths
-        self.__tmpDir = mkdtemp()
-        if not pdfPath:
-            self.__pdfPath = join(expanduser('~'), "workout.pdf")
-        else:
-            self.__pdfPath = pdfPath
+        self.__tempDir = mkdtemp()
+        self.__pdfPath = join(expanduser('~'), "workout.pdf") if not pdfPath else pdfPath
+
+    @property
+    def tempDir(self):
+        return self.__tempDir
+
+    @tempDir.setter
+    def tempDir(self, tempDir):
+        if not isinstance(tempDir, str):
+            raise TypeError
+        assert exists(tempDir), "The temp directory path must be valid"
+        self.__tempDir = tempDir
+
+    @property
+    def pdfPath(self):
+        return self.__pdfPath
 
     def __prepare(self):
         paths = list(filter(self.__condition, argv))
@@ -24,7 +36,7 @@ class PdfCreator:
             return None
         tmpPaths = []
         for src in paths:
-            dst = join(self.__tmpDir, basename(src))
+            dst = join(self.__tempDir, basename(src))
             copyfile(src, dst)
             tmpPaths.append(dst)
         return tmpPaths
@@ -74,9 +86,8 @@ class PdfCreator:
             exit(1)
         self.__convert(imagePaths)
 
-
     def __exit__(self, exc_type, exc_val, exc_tb):
-        rmtree(self.__tmpDir)
+        rmtree(self.__tempDir)
 
     def __condition(self, p):
         return exists(p) and isfile(p) and search(r'\.jpg$|\.bmp$|\.tiff$|\.png$|\.gif$|\.jpeg$', p) != None
