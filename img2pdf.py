@@ -17,8 +17,8 @@ class PdfCreator:
         else:
             self.__pdfPath = pdfPath
 
-    def __prepare__(self):
-        paths = list(filter(self.condition, argv))
+    def __prepare(self):
+        paths = list(filter(self.__condition, argv))
         if not len(paths):
             print("Error: there are not files for processing!")
             return None
@@ -29,7 +29,7 @@ class PdfCreator:
             tmpPaths.append(dst)
         return tmpPaths
 
-    def __convert__(self,imagePaths):
+    def __convert(self,imagePaths):
         doc = platypus.SimpleDocTemplate(self.__pdfPath)
         doc.leftMargin = 0
         doc.bottomMargin = 0
@@ -69,16 +69,16 @@ class PdfCreator:
             print("Pdf file was not created")
 
     def create(self):
-        imagePaths = self.__prepare__()
+        imagePaths = self.__prepare()
         if not imagePaths:
             exit(1)
-        self.__convert__(imagePaths)
+        self.__convert(imagePaths)
 
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         rmtree(self.__tmpDir)
 
-    def condition(self, p):
+    def __condition(self, p):
         return exists(p) and isfile(p) and search(r'\.jpg$|\.bmp$|\.tiff$|\.png$|\.gif$|\.jpeg$', p) != None
 
 
