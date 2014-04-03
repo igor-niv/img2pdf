@@ -80,13 +80,13 @@ class PdfCreator:
             print("Pdf file was not created")
             if exists(self.__pdfPath):
                 remove(self.__pdfPath)
-
+        return hasStory
 
     def create(self):
         imagePaths = self.__prepare()
         if not imagePaths:
-            exit(1)
-        self.__convert(imagePaths)
+            return False
+        return self.__convert(imagePaths)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         rmtree(self.__tempDir)
