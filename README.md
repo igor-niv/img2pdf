@@ -5,5 +5,5 @@ img2pdf is a python script to convert image files to a single pdf file (A4 paper
 <br>
 <br>
 Usage:<br>
-python3 img2pdf.py image_file1[image_file2...]
+python3 img2pdf.py image_file1_name[image_file2_name...]
 
