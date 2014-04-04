@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from os.path import exists, isfile, join, expanduser, basename, isdir
 from shutil import copyfile, rmtree
 from sys import argv
@@ -8,6 +10,7 @@ from re import search
 from os import remove, listdir
 import argparse
 import subprocess
+import unittest
 
 class PdfCreator:
     def __init__(self, imagePaths, pdfPath = None):
@@ -31,7 +34,7 @@ class PdfCreator:
         return self.__pdfPath
 
     def __prepare(self):
-        paths = list(filter(self.__condition, argv))
+        paths = list(filter(self.__condition, self.__imagePaths))
         if not len(paths):
             print("Error: there are not files for processing!")
             return None
@@ -48,7 +51,6 @@ class PdfCreator:
         doc.bottomMargin = 0
         doc.rightMargin = 0
         doc.topMargin = 0
-        size = (int(8.27 * 72)*4, int(11.69 * 72)*4)
         pageWidth = 583
         pageHeight = 829
         story = []
@@ -68,7 +70,6 @@ class PdfCreator:
             if imageHeight > pageHeight:
                 imageHeight = pageHeight
                 imageWidth = imageHeight / ratio
-            pilImg.thumbnail(size, Image.ANTIALIAS)
             pilImg.save(p)
             repImg = platypus.Image(p, imageWidth, imageHeight)
             story.append(repImg)
@@ -134,13 +135,13 @@ def parseArgs():
         for file in args.files:
             assert exists(file) and isfile(file), "File or directory not found: " + file
             filePaths.append(file)
-    return args.printer, args.out
+    return args.printer, filePaths, args.out
 
 ########################################################################
 
 if __name__ == "__main__":
-    isPrint, pdfPath = parseArgs()
-    pdfCreator = PdfCreator(argv[1:], pdfPath)
+    isPrint, filePaths, pdfPath = parseArgs()
+    pdfCreator = PdfCreator(filePaths, pdfPath)
     pdfCreator.create()
     if isPrint:
         subprocess.call(["lpr", pdfCreator.pdfPath])
