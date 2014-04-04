@@ -1,11 +1,13 @@
-from os.path import exists, isfile, join, expanduser, basename
+from os.path import exists, isfile, join, expanduser, basename, isdir
 from shutil import copyfile, rmtree
 from sys import argv
 from reportlab import platypus
 from PIL import Image
 from tempfile import mkdtemp
 from re import search
-from os import remove
+from os import remove, listdir
+import argparse
+import subprocess
 
 class PdfCreator:
     def __init__(self, imagePaths, pdfPath = None):
@@ -86,18 +88,59 @@ class PdfCreator:
         imagePaths = self.__prepare()
         if not imagePaths:
             return False
-        return self.__convert(imagePaths)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
+        result = self.__convert(imagePaths)
         rmtree(self.__tempDir)
+        return result
 
     def __condition(self, p):
         return exists(p) and isfile(p) and search(r'\.jpg$|\.bmp$|\.tiff$|\.png$|\.gif$|\.jpeg$', p) != None
 
+########################################################################
+
+def recursiveSearch(p, fps):
+    def enumFilesInDir():
+        _files = listdir(p)
+        for i in range(0, len(_files)):
+            _files[i] = join(p, _files[i])
+        return _files
+    files = enumFilesInDir()
+    for f in files:
+        assert exists(f), "File or directory not found: " + f
+        if isdir(f):
+            recursiveSearch(f, fps)
+        elif isfile(f):
+            fps.append(f)
+
+
+def parseArgs():
+    parser = argparse.ArgumentParser(description="img2pdf.py is very simple python script to convert "
+                                                 "image files to a single pdf file (A4 paper size)")
+    parser.add_argument("-d", "--directories",
+                        help="search image files in specified directories (recursive search only)", type=str, nargs="+")
+    parser.add_argument("-f", "--files",
+                        help="image file names", type=str, nargs="+")
+    parser.add_argument("--printer",
+                        help="if this option is enabled, "
+                             "script create the pdf file and print it on a default printer", action="store_true")
+    parser.add_argument("--out",
+                        help="Full path of the PDF file (~/workout.pdf is default) ", type=str)
+    args = parser.parse_args()
+
+    filePaths = []
+    if args.directories:
+        for dir in args.directories:
+            recursiveSearch(dir, filePaths)
+    if args.files:
+        for file in args.files:
+            assert exists(file) and isfile(file), "File or directory not found: " + file
+            filePaths.append(file)
+    return args.printer, args.out
 
 ########################################################################
+
 if __name__ == "__main__":
-    if len(argv) == 1 or argv[-1] == '--help':
-        print("Usage:\npython3 img2pdf.py image_file1[image_file2...]")
-        exit(0)
-    PdfCreator(argv[1:]).create()
+    isPrint, pdfPath = parseArgs()
+    pdfCreator = PdfCreator(argv[1:], pdfPath)
+    pdfCreator.create()
+    if isPrint:
+        subprocess.call(["lpr", pdfCreator.pdfPath])
