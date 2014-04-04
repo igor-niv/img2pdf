@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from os.path import exists, isfile, join, expanduser, basename, isdir
 from shutil import copyfile, rmtree
 from sys import argv
